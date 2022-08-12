@@ -139,6 +139,8 @@ NGINX_UPSTREAM_REMOTE_FILE=${NGINX_UPSTREAM_REMOTE_PATH}/${GIT_BRANCH}.${CLOUD_H
 NGINX_UPSTREAM_REMOTE_BACKUP=${NGINX_UPSTREAM_REMOTE_PATH}/${GIT_BRANCH}.${CLOUD_HOSTNAME}-upstream.bak
 NGINX_UPSTREAM_APPLIED_FILE=${NGINX_DIR}/${GIT_BRANCH}.${CLOUD_HOSTNAME}-upstream.ok
 
+export
+
 version:
 	@echo ${APP_GROUP} ${APP} ${APP_VERSION}
 
@@ -559,6 +561,10 @@ SCW-instance-delete-invalid: SCW-instance-get-tagged-ids-invalid
 	else\
 		(echo no ${CLOUD_TAGGED_IDS_INVALID_FILE} for deletion);\
 	fi
+
+SCW-k8s-create:
+	@export SCW_FLAVOR=${SCW_KUBE_FLAVOR};\
+	${TOOLS_PATH}/scripts/create_k8s_cluster.sh
 
 ${CLOUD_SNAPSHOT_ID_FILE}.done: ${CLOUD_DIR}
 	@if [ ! -f "${CLOUD_SNAPSHOT_ID_FILE}.done" ];then\
