@@ -1,9 +1,9 @@
 #SCALEWAY TEMPLATE to copy to artifacts if you have to deploy to scaleway
-SCW_REGION=fr-par
-SCW_ENDPOINT=s3.${SCW_REGION}.scw.cloud
-SCW_ZONE=${SCW_REGION}-1
-SCW_API=https://api.scaleway.com/instance/v1/zones/${SCW_ZONE}
-SCW_IPAM_API=https://api.scaleway.com/ipam/v1alpha1/regions/${SCW_REGION}
+export SCW_REGION=fr-par
+export SCW_ENDPOINT=s3.${SCW_REGION}.scw.cloud
+export SCW_ZONE=${SCW_REGION}-1
+export SCW_API=https://api.scaleway.com/instance/v1/zones/${SCW_ZONE}
+export SCW_IPAM_API=https://api.scaleway.com/ipam/v1alpha1/regions/${SCW_REGION}
 SCW_FLAVOR=DEV1-S
 SCW_VOLUME_SIZE=10000000000
 SCW_VOLUME_TYPE=l_ssd
