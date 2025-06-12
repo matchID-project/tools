@@ -1198,7 +1198,9 @@ remote-install-monitor: remote-install-root-aws-credentials
 		U=$$(cat ${CLOUD_USER_FILE});\
 		cat ${TOOLS_PATH}/fluent-bit/plugins.conf | ssh ${SSHOPTS} $$U@$$H "sudo tee /tmp/plugins.conf > /dev/null";\
 		cat ${TOOLS_PATH}/fluent-bit/fluent-bit.conf | sed "s/<NEW_RELIC_INGEST_KEY>/${NEW_RELIC_INGEST_KEY}/;s|<HTTPS_PROXY>|${remote_http_proxy}|;s|<MONITOR_BUCKET>|${MONITOR_BUCKET}|;s|<MONITOR_DIR>|${MONITOR_DIR}|" | ssh ${SSHOPTS} $$U@$$H "sudo tee /tmp/fluent-bit.conf > /dev/null";\
-		ssh ${SSHOPTS} $$U@$$H "(sudo systemctl stop unattended-upgrades;sleep 30;curl -Ls https://download.newrelic.com/install/newrelic-cli/scripts/install.sh | bash && sudo HTTPS_PROXY=${remote_http_proxy} NEW_RELIC_API_KEY=${NEW_RELIC_API_KEY} NEW_RELIC_ACCOUNT_ID=${NEW_RELIC_ACCOUNT_ID} NEW_RELIC_REGION=EU /usr/local/bin/newrelic install -y && echo New Relic Installed && curl -s https://raw.githubusercontent.com/fluent/fluent-bit/master/install.sh | sh && sudo mv /tmp/fluent-bit.conf /tmp/plugins.conf /etc/fluent-bit/ && sudo systemctl restart fluent-bit && echo Fluent-bit installed && sudo systemctl start unattended-upgrades) > .install-monitor.log 2>&1 &";\
+		ssh ${SSHOPTS} $$U@$$H "(sudo systemctl stop unattended-upgrades;sleep 30;curl -Ls https://download.newrelic.com/install/newrelic-cli/scripts/install.sh | bash && sudo HTTPS_PROXY=${remote_http_proxy} NEW_RELIC_API_KEY=${NEW_RELIC_API_KEY} NEW_RELIC_ACCOUNT_ID=${NEW_RELIC_ACCOUNT_ID} NEW_RELIC_REGION=EU /usr/local/bin/newrelic install -y && echo New Relic Installed) > .install-newrelic.log 2>&1 &";\
+		ssh ${SSHOPTS} $$U@$$H "(sudo systemctl stop unattended-upgrades;sleep 30;curl -s https://raw.githubusercontent.com/fluent/fluent-bit/master/install.sh | sh; sudo mv /tmp/fluent-bit.conf /etc/fluent-bit/ && echo 'HOME=/root' | sudo tee /etc/default/fluent-bit && sudo systemctl daemon-reload && sudo systemctl restart fluent-bit && echo Fluent-bit installed) > .install-fluentbit.log 2>&1 &";\
+		ssh ${SSHOPTS} $$U@$$H "(sleep 3600;sudo systemctl start unattended-upgrades) > .install-reactivate-upgrades.log 2>&1 &";\
 	fi
 
 cdn-cache-purge:
