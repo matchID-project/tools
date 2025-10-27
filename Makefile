@@ -963,16 +963,43 @@ datagouv-get-files: ${DATAGOUV_CATALOG}
 		for file in $$(awk '{print $$1}' ${DATA_DIR}/tmp.list); do\
 			if [ ! -f ${DATA_DIR}/$$file.gz.sha1 ]; then\
 				echo getting $$file ;\
-				grep $$file ${DATA_DIR}/tmp.list | awk '{print $$3}' | xargs curl -s > ${DATA_DIR}/$$file; \
-				grep $$file ${DATA_DIR}/tmp.list | awk '{print $$2}' > ${DATA_DIR}/$$file.sha1.src; \
-				sha1sum < ${DATA_DIR}/$$file | awk '{print $$1}' > ${DATA_DIR}/$$file.sha1.dst; \
-				((diff ${DATA_DIR}/$$file.sha1.src ${DATA_DIR}/$$file.sha1.dst > /dev/null) || echo error downloading $$file); \
-				if [[ "$$file" == "deces"* ]]; then\
-					if [ "$$file" \> "deces-2010" ];then\
-						recode utf8..latin1 ${DATA_DIR}/$$file;\
+				URL=$$(grep $$file ${DATA_DIR}/tmp.list | awk '{print $$3}');\
+				if [ -z "$$URL" ]; then\
+					echo "  URL not in catalog, trying API...";\
+					API_URL=$$(curl -s --fail ${DATAGOUV_API}/${DATAGOUV_DATASET}/ | \
+						jq -r ".resources[] | select(.title == \"$$file\") | .url" | head -1);\
+					if [ ! -z "$$API_URL" ]; then\
+						URL="$$API_URL";\
+						echo "  Found in API: $$URL";\
+					fi;\
+				else\
+					echo "  URL: $$URL";\
+				fi;\
+				if [ ! -z "$$URL" ] && curl -s --fail $$URL > ${DATA_DIR}/$$file 2>/dev/null; then\
+					echo "  ✓ Downloaded $$file (.txt)";\
+					sha1sum < ${DATA_DIR}/$$file | awk '{print $$1}' > ${DATA_DIR}/$$file.sha1.dst; \
+					if [[ "$$file" == "deces"* ]]; then\
+						if [ "$$file" \> "deces-2010" ];then\
+							recode utf8..latin1 ${DATA_DIR}/$$file;\
+						fi;\
+					fi;\
+					gzip ${DATA_DIR}/$$file; \
+				else\
+					echo "  .txt not available, trying .txt.gz";\
+					if [ -z "$$URL" ]; then\
+						API_URL_GZ=$$(curl -s --fail ${DATAGOUV_API}/${DATAGOUV_DATASET}/ | \
+							jq -r ".resources[] | select(.title == \"$$file.gz\") | .url" | head -1);\
+						URL_GZ="$$API_URL_GZ";\
+					else\
+						URL_GZ="$${URL}.gz";\
+					fi;\
+					if [ ! -z "$$URL_GZ" ] && curl -s --fail $$URL_GZ > ${DATA_DIR}/$$file.gz 2>/dev/null; then\
+						echo "  ✓ Downloaded $$file.gz";\
+					else\
+						echo "  ✗ Failed to download $$file (both .txt and .txt.gz)";\
+						continue;\
 					fi;\
 				fi;\
-				gzip ${DATA_DIR}/$$file; \
 				sha1sum ${DATA_DIR}/$$file.gz > ${DATA_DIR}/$$file.gz.sha1; \
 				((i++));\
 			fi;\
